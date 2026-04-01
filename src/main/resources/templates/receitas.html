@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>Lista de Receitas</h2>
+
+<table border="1">
+    <tr>
+        <th>Nome</th>
+        <th>Descrição</th>
+        <th>Tipo</th>
+        <th>Custo</th>
+        <th>Data</th>
+    </tr>
+
+    <tr th:each="r : ${receitas}">
+        <td th:text="${r.nome}"></td>
+        <td th:text="${r.descricao}"></td>
+        <td th:text="${r.tipoReceita}"></td>
+        <td th:text="${r.custo}"></td>
+        <td th:text="${r.dataRegistro}"></td>
+    </tr>
+</table>
+
+</body>
+</html>
