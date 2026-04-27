@@ -17,51 +17,26 @@ public class Receita {
     private BigDecimal custo;
     private String tipoReceita;
 
-    public Long getId() {
-        return id;
-    }
+    /** ATIVO | INATIVO */
+    private String status = "ATIVO";
 
-    public String getNome() {
-        return nome;
-    }
+    // ---- getters ----
 
-    public String getDescricao() {
-        return descricao;
-    }
+    public Long getId() { return id; }
+    public String getNome() { return nome; }
+    public String getDescricao() { return descricao; }
+    public LocalDate getDataRegistro() { return dataRegistro; }
+    public BigDecimal getCusto() { return custo; }
+    public String getTipoReceita() { return tipoReceita; }
+    public String getStatus() { return status; }
 
-    public LocalDate getDataRegistro() {
-        return dataRegistro;
-    }
+    // ---- setters ----
 
-    public BigDecimal getCusto() {
-        return custo;
-    }
-
-    public String getTipoReceita() {
-        return tipoReceita;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
-
-    public void setDataRegistro(LocalDate dataRegistro) {
-        this.dataRegistro = dataRegistro;
-    }
-
-    public void setCusto(BigDecimal custo) {
-        this.custo = custo;
-    }
-
-    public void setTipoReceita(String tipoReceita) {
-        this.tipoReceita = tipoReceita;
-    }
+    public void setId(Long id) { this.id = id; }
+    public void setNome(String nome) { this.nome = nome; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public void setDataRegistro(LocalDate dataRegistro) { this.dataRegistro = dataRegistro; }
+    public void setCusto(BigDecimal custo) { this.custo = custo; }
+    public void setTipoReceita(String tipoReceita) { this.tipoReceita = tipoReceita; }
+    public void setStatus(String status) { this.status = status; }
 }
