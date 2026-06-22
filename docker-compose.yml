@@ -1,0 +1,70 @@
+services:
+
+  # ── Versionamento + Controle de mudança + Integração (CI) ──────────────────
+  gitea:
+    image: gitea/gitea:1.26
+    container_name: gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__actions__ENABLED=true
+      - GITEA__server__ROOT_URL=http://localhost:3000/
+    volumes:
+      - gitea-data:/data
+    ports:
+      - "3000:3000"
+      - "2222:22"
+    restart: unless-stopped
+
+  # ── Banco de dados único, com uma base lógica por ambiente ──────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: receitas-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_MULTIPLE_DATABASES=receitas_homolog,receitas_prod
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./scripts/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+
+  # ── Ambiente de Homologação ─────────────────────────────────────────────────
+  app-homolog:
+    build: .
+    container_name: receitas-homolog
+    depends_on:
+      - db
+    environment:
+      - SPRING_PROFILES_ACTIVE=homolog
+      - DB_URL=jdbc:postgresql://db:5432/receitas_homolog
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - JAVA_OPTS=-Xmx320m
+    ports:
+      - "8081:8080"
+
+  # ── Ambiente de Produção ─────────────────────────────────────────────────────
+  app-prod:
+    build: .
+    container_name: receitas-prod
+    depends_on:
+      - db
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_URL=jdbc:postgresql://db:5432/receitas_prod
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - JAVA_OPTS=-Xmx320m
+    ports:
+      - "8082:8080"
+
+volumes:
+  gitea-data:
+  db-data:

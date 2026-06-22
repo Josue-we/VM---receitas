@@ -1,0 +1,66 @@
+name: pipeline-receitas
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+
+  # ── D) Testes automatizados + E) Análise de qualidade ──────────────────────
+  build-and-test:
+    runs-on: host
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Garantir permissão de execução do mvnw
+        run: chmod +x mvnw
+
+      - name: Build, testes (20 testes) e checkstyle
+        run: ./mvnw -B verify
+
+      - name: Estatísticas de execução dos testes
+        if: always()
+        run: |
+          TOTAL=0; FAIL=0; ERR=0
+          for f in target/surefire-reports/*.xml; do
+            T=$(grep -oP 'tests="\K[0-9]+' "$f" | head -1)
+            F=$(grep -oP 'failures="\K[0-9]+' "$f" | head -1)
+            E=$(grep -oP 'errors="\K[0-9]+' "$f" | head -1)
+            TOTAL=$((TOTAL + T)); FAIL=$((FAIL + F)); ERR=$((ERR + E))
+          done
+          {
+            echo "### Resultado dos testes automatizados"
+            echo "- Total executado: $TOTAL"
+            echo "- Aprovados: $((TOTAL - FAIL - ERR))"
+            echo "- Falhas: $FAIL"
+            echo "- Erros: $ERR"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ── F) Atualização do ambiente de Homologação ──────────────────────────────
+  # Disparada automaticamente a cada push na branch main
+  deploy-homolog:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: host
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build e subir Homologação
+        run: |
+          docker compose build app-homolog
+          docker compose up -d app-homolog
+
+  # ── G) Atualização do ambiente de Produção ─────────────────────────────────
+  # Só dispara quando alguém cria uma tag (ex: v1.0.1) - é o "clique"/passo
+  # manual exigido pelo trabalho antes de ir pra produção
+  deploy-prod:
+    needs: build-and-test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: host
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build e subir Produção
+        run: |
+          docker compose build app-prod
+          docker compose up -d app-prod
